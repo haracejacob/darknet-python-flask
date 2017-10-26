@@ -2,7 +2,6 @@
 
 import os
 import time
-import cPickle
 import datetime
 import logging
 import flask
@@ -57,7 +56,9 @@ def classify_url():
     logging.info('Image: %s', imageurl)
     result = app.clf.classify_image(filename)
     return flask.render_template(
-        'index.html', has_result=True, result=result, imagesrc=imageurl)
+        'index.html', has_result=True, result=result, 
+        imagesrc=embed_image_html(filename)
+    )
 
 
 @app.route('/classify_upload', methods=['POST'])
@@ -99,7 +100,6 @@ def classify_rest():
         return jsonify(val = 'Cannot open uploaded image.')
 
     result = app.clf.classify_image(filename)
-    print (result)
 
     return jsonify(	val = result)
 
