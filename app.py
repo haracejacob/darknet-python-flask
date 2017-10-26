@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+from os.path import splitext, basename
 import time
 import datetime
 import logging
@@ -14,6 +15,7 @@ from flask import jsonify
 from PIL import Image
 import cStringIO as StringIO
 import urllib
+from urlparse import urlparse
 #import exifutil
 import cv2
 
@@ -36,12 +38,18 @@ def index():
 def classify_url():
     imageurl = flask.request.args.get('imageurl', '')
     try:
-        string_buffer = StringIO.StringIO(
-            urllib.urlopen(imageurl).read())
+        #string_buffer = StringIO.StringIO(
+        #    urllib.urlopen(imageurl).read())
+	#image = Image.open(string_buffer)
+	disassembled = urlparse(imageurl)
+	print(disassembled)
+	image_name, image_ext = splitext(basename(disassembled.path))
+	print(image_name, image_ext)
         filename_ = str(datetime.datetime.now()).replace(' ', '_') + \
-            werkzeug.secure_filename(imagefile.filename)
+            werkzeug.secure_filename(image_name+image_ext)
         filename = os.path.join(UPLOAD_FOLDER, filename_)
-        string_buffer.save(filename)
+	urllib.urlretrieve(imageurl, filename)
+        #string_buffer.save(filename)
         logging.info('Saving to %s.', filename)
     except Exception as err:
         # For any exception we encounter in reading the image, we will just
@@ -100,7 +108,7 @@ def classify_rest():
 
     result = app.clf.classify_image(filename)
 
-    return jsonify(	val = result)
+    return jsonify(val = result)
 
 def embed_image_html(image):
     """Creates an image embedded in HTML base64 format."""
