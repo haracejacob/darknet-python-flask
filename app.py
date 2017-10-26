@@ -10,7 +10,6 @@ import optparse
 import tornado.wsgi
 import tornado.httpserver
 import numpy as np
-#import pandas as pd
 from flask import jsonify
 from PIL import Image
 import cStringIO as StringIO
@@ -78,7 +77,7 @@ def classify_upload():
             result=(False, 'Cannot open uploaded image.')
         )
     result = app.clf.classify_image(filename)
-    
+   
     return flask.render_template(
         'index.html', has_result=True, result=result,
         imagesrc=embed_image_html(filename)
@@ -106,20 +105,24 @@ def classify_rest():
 def embed_image_html(image):
     """Creates an image embedded in HTML base64 format."""
     #image = image[:,:,(2,1,0)]
-    image_pil = Image.fromarray((255 * image).astype('uint8'))
-    image_pil = image_pil.resize((256, 256))
+    im = Image.open(image)
+    #image_pil = Image.fromarray((255 * im).astype('uint8'))
+    #image_pil = image_pil.resize((256, 256))
     string_buf = StringIO.StringIO()
-    image_pil.save(string_buf, format='png')
+    im.save(string_buf, format='png')
     data = string_buf.getvalue().encode('base64').replace('\n', '')
     return 'data:image/png;base64,' + data
 
-class ImagenetDetector(object) :
+class ImageDetector(object) :
     def __init__(self, cfg_file, weights_file, meta_file) :
         self.net = dn.load_net(cfg_file, weights_file, 0)
         self.meta = dn.load_meta(meta_file)
+	print("Success to load darknet")
         
     def classify_image(self, image) :
+	print("Classfy : ", image)
         res = dn.detect(self.net, self.meta, image)
+	print(res)
         return res
 
 def start_tornado(app, port=5000):
