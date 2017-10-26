@@ -6,7 +6,7 @@ Configure the darknet rest api server using the python flask.
 <https://pjreddie.com/darknet/install/> - how to install darknet
 * install python packages
 <pre><code>
-pip install flask tornado
+pip install flask tornado Pillow
 </code></pre>
 
 ## reference
