@@ -13,11 +13,11 @@ import tornado.httpserver
 import numpy as np
 from flask import jsonify
 from PIL import Image
+from PIL import ImageDraw
 import cStringIO as StringIO
 import urllib
 from urlparse import urlparse
 #import exifutil
-import cv2
 
 import darknet as dn
 
@@ -62,9 +62,12 @@ def classify_url():
 
     logging.info('Image: %s', imageurl)
     result = app.clf.classify_image(filename)
+    dr_image = result[-1]
+    result = result[:-1]
     return flask.render_template(
         'index.html', has_result=True, result=result, 
-        imagesrc=embed_image_html(filename)
+        imagesrc=embed_image_html(filename),
+	proc_imagesrc=embed_image_html(dr_image)
     )
 
 
@@ -85,10 +88,12 @@ def classify_upload():
             result=(False, 'Cannot open uploaded image.')
         )
     result = app.clf.classify_image(filename)
-   
+    dr_image = result[-1]
+    result = result[:-1]
     return flask.render_template(
         'index.html', has_result=True, result=result,
-        imagesrc=embed_image_html(filename)
+        imagesrc=embed_image_html(filename), 
+	proc_imagesrc=embed_image_html(dr_image)
     )
 
 
@@ -107,15 +112,12 @@ def classify_rest():
         return jsonify(val = 'Cannot open uploaded image.')
 
     result = app.clf.classify_image(filename)
-
+    result = result[:-1]
     return jsonify(val = result)
 
 def embed_image_html(image):
     """Creates an image embedded in HTML base64 format."""
-    #image = image[:,:,(2,1,0)]
     im = Image.open(image)
-    #image_pil = Image.fromarray((255 * im).astype('uint8'))
-    #image_pil = image_pil.resize((256, 256))
     string_buf = StringIO.StringIO()
     im.save(string_buf, format='png')
     data = string_buf.getvalue().encode('base64').replace('\n', '')
@@ -130,7 +132,16 @@ class ImageDetector(object) :
     def classify_image(self, image) :
 	print("Classfy : ", image)
         res = dn.detect(self.net, self.meta, image)
-	print(res)
+	
+	img = Image.open(image)
+	dr = ImageDraw.Draw(img)
+	for data in res :
+	    x,y,w,h = data[2]
+	    for i in range(5) :
+	    	dr.rectangle((x-w/2+i,y-h/2+i,x+w/2-i,y+h/2-i), outline=(46, 254, 46))
+	dr_image = image[:image.rfind('.')]+'_deect'+image[image.rfind('.'):]
+	img.save(dr_image)
+	res.append(dr_image)
         return res
 
 def start_tornado(app, port=5000):
