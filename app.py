@@ -10,14 +10,12 @@ import werkzeug
 import optparse
 import tornado.wsgi
 import tornado.httpserver
-import numpy as np
 from flask import jsonify
 from PIL import Image
 from PIL import ImageDraw
 import cStringIO as StringIO
 import urllib
 from urlparse import urlparse
-#import exifutil
 
 import darknet as dn
 
@@ -28,19 +26,14 @@ ALLOWED_IMAGE_EXTENSIONS = set(['png', 'bmp', 'jpg', 'jpe', 'jpeg', 'gif'])
 # Obtain the flask app object
 app = flask.Flask(__name__)
 
-
 @app.route('/')
 def index():
     return flask.render_template('index.html', has_result=False)
-
 
 @app.route('/classify_url', methods=['GET'])
 def classify_url():
     imageurl = flask.request.args.get('imageurl', '')
     try:
-        #string_buffer = StringIO.StringIO(
-        #    urllib.urlopen(imageurl).read())
-	#image = Image.open(string_buffer)
 	disassembled = urlparse(imageurl)
 	print(disassembled)
 	image_name, image_ext = splitext(basename(disassembled.path))
@@ -49,7 +42,6 @@ def classify_url():
             werkzeug.secure_filename(image_name+image_ext)
         filename = os.path.join(UPLOAD_FOLDER, filename_)
 	urllib.urlretrieve(imageurl, filename)
-        #string_buffer.save(filename)
         logging.info('Saving to %s.', filename)
     except Exception as err:
         # For any exception we encounter in reading the image, we will just
@@ -69,7 +61,6 @@ def classify_url():
         imagesrc=embed_image_html(filename),
 	proc_imagesrc=embed_image_html(dr_image)
     )
-
 
 @app.route('/classify_upload', methods=['POST'])
 def classify_upload():
@@ -95,7 +86,6 @@ def classify_upload():
         imagesrc=embed_image_html(filename), 
 	proc_imagesrc=embed_image_html(dr_image)
     )
-
 
 @app.route('/classify_rest', methods=['POST'])
 def classify_rest():
@@ -151,7 +141,6 @@ def start_tornado(app, port=5000):
     print("Tornado server starting on port {}".format(port))
     tornado.ioloop.IOLoop.instance().start()
 
-
 def start_from_terminal(app):
     """
     Parse command line options and start the server.
@@ -186,7 +175,6 @@ def start_from_terminal(app):
         app.run(debug=True, host='0.0.0.0', port=opts.port)
     else:
         start_tornado(app, opts.port)
-
 
 if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO)
